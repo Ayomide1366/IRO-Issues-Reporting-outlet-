@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRO — Issues Reporting Outlet</title>
+<style>
+  :root {
+    --clay: #A0522D;
+    --clay-dark: #7A3B1E;
+    --sand: #F2E9DD;
+    --ink: #2B2420;
+    --ink-soft: #6B5F55;
+    --line: #D8C9B4;
+    --ok: #4C6B4F;
+    --warn: #B8863B;
+    --pending: #8C7A63;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--sand);
+    color: var(--ink);
+  }
+  header {
+    background: var(--clay);
+    color: white;
+    padding: 28px 20px 24px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 1.9rem;
+    letter-spacing: 0.5px;
+  }
+  header p {
+    margin: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.4;
+  }
+  nav {
+    display: flex;
+    background: var(--clay-dark);
+  }
+  nav button {
+    flex: 1;
+    padding: 13px 8px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.75);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+  }
+  nav button.active {
+    color: white;
+    border-bottom: 3px solid var(--sand);
+  }
+  main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 22px 18px 60px;
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  h2 {
+    font-size: 1.15rem;
+    margin: 0 0 4px;
+    color: var(--clay-dark);
+  }
+  .sub {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    line-height: 1.5;
+  }
+  label {
+    display: block;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--ink-soft);
+    margin: 14px 0 6px;
+  }
+  select, input[type="text"], textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.95rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--sand);
+    color: var(--ink);
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  .radio-row {
+    display: flex;
+    gap: 10px;
+  }
+  .radio-row label.pill {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    text-transform: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--ink);
+    cursor: pointer;
+    margin: 0;
+  }
+  .radio-row input { display: none; }
+  .radio-row input:checked + label.pill,
+  label.pill.checked {
+    background: var(--clay);
+    color: white;
+    border-color: var(--clay);
+  }
+  button.submit {
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px;
+    background: var(--clay);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+  button.submit:active { background: var(--clay-dark); }
+
+  .issue {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: white;
+  }
+  .issue-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .issue-cat {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--clay-dark);
+    font-weight: 700;
+  }
+  .status {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .status.Pending { background: #EFE6D8; color: var(--pending); }
+  .status.Reviewing { background: #F5E4C3; color: var(--warn); }
+  .status.Resolved { background: #E1EAE1; color: var(--ok); }
+  .issue p.desc {
+    margin: 8px 0 6px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+  .issue .meta {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+  }
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-soft);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.88rem;
+  }
+  .banner {
+    background: var(--ok);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .banner.show { display: block; }
+  .about-list {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    padding-left: 18px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>IRO — Issues Reporting Outlet</h1>
+  <p>A shared channel for AAUA students and Akungba, Iwaro, Etioro &amp; Ayegunle indigenes to report and resolve community issues together.</p>
+</header>
+
+<nav>
+  <button class="tab active" data-view="home">About</button>
+  <button class="tab" data-view="submit">Report Issue</button>
+  <button class="tab" data-view="feed">Issue Feed</button>
+</nav>
+
+<main>
+
+  <section id="home" class="view active">
+    <div class="card">
+      <h2>Why IRO exists</h2>
+      <p class="sub">Town–gown friction between the university community and host indigenes often goes unheard because there is no shared, trusted channel to raise it. IRO gives both sides one place to speak and be tracked.</p>
+      <ul class="about-list">
+        <li>Report an issue in under a minute — no jargon, no complex forms</li>
+        <li>See what's already been reported, so concerns aren't duplicated</li>
+        <li>Track a report from submission to resolution</li>
+        <li>Open to both students and indigenes, by design</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>How it works</h2>
+      <p class="sub">Submit a report → an admin reviews and categorizes it → it's escalated to the right authority → status updates as it moves toward resolution.</p>
+    </div>
+  </section>
+
+  <section id="submit" class="view">
+    <div class="card">
+      <h2>Report an issue</h2>
+      <p class="sub">Your report is shared with the IRO moderation team. Be as specific as you can.</p>
+
+      <div class="banner" id="successBanner">Report submitted. You can track it in the Issue Feed.</div>
+
+      <label>I am a</label>
+      <div class="radio-row">
+        <input type="radio" name="reporterType" id="rtStudent" value="Student" checked>
+        <label class="pill checked" for="rtStudent" id="pillStudent">Student</label>
+        <input type="radio" name="reporterType" id="rtIndigene" value="Indigene">
+        <label class="pill" for="rtIndigene" id="pillIndigene">Indigene</label>
+      </div>
+
+      <label for="category">Issue category</label>
+      <select id="category">
+        <option>Land / Property Dispute</option>
+        <option>Security Concern</option>
+        <option>Noise / Public Disturbance</option>
+        <option>Trade / Market Dispute</option>
+        <option>Housing / Landlord Issue</option>
+        <option>Infrastructure (roads, power, water)</option>
+        <option>Cultural / Social Misunderstanding</option>
+        <option>Other</option>
+      </select>
+
+      <label for="location">Location</label>
+      <input type="text" id="location" placeholder="e.g. Akungba, near central market">
+
+      <label for="description">Describe the issue</label>
+      <textarea id="description" placeholder="What happened, when, and who is involved?"></textarea>
+
+      <button class="submit" onclick="submitIssue()">Submit Report</button>
+    </div>
+  </section>
+
+  <section id="feed" class="view">
+    <div id="feedList"></div>
+  </section>
+
+</main>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const views = document.querySelectorAll('.view');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      views.forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.view).classList.add('active');
+      if (tab.dataset.view === 'feed') renderFeed();
+    });
+  });
+
+  document.getElementById('rtStudent').addEventListener('change', updatePills);
+  document.getElementById('rtIndigene').addEventListener('change', updatePills);
+  function updatePills() {
+    document.getElementById('pillStudent').classList.toggle('checked', document.getElementById('rtStudent').checked);
+    document.getElementById('pillIndigene').classList.toggle('checked', document.getElementById('rtIndigene').checked);
+  }
+
+  let issues = [
+    {
+      category: "Land / Property Dispute",
+      location: "Iwaro, near old market road",
+      description: "Boundary disagreement between a landlord and student tenants over an unmarked plot line.",
+      reporterType: "Indigene",
+      status: "Reviewing",
+      date: "2026-07-02"
+    },
+    {
+      category: "Noise / Public Disturbance",
+      location: "Etioro student lodge area",
+      description: "Late-night gatherings disturbing indigene households on weekdays.",
+      reporterType: "Student",
+      status: "Pending",
+      date: "2026-07-05"
+    },
+    {
+      category: "Infrastructure (roads, power, water)",
+      location: "Ayegunle main road",
+      description: "Shared borehole access point damaged, affecting both student hostels and indigene compounds.",
+      reporterType: "Indigene",
+      status: "Resolved",
+      date: "2026-06-28"
+    }
+  ];
+
+  function submitIssue() {
+    const category = document.getElementById('category').value;
+    const location = document.getElementById('location').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const reporterType = document.querySelector('input[name="reporterType"]:checked').value;
+
+    if (!description) {
+      alert('Please describe the issue before submitting.');
+      return;
+    }
+
+    issues.unshift({
+      category, location: location || 'Not specified', description,
+      reporterType, status: 'Pending',
+      date: new Date().toISOString().slice(0,10)
+    });
+
+    document.getElementById('location').value = '';
+    document.getElementById('description').value = '';
+
+    const banner = document.getElementById('successBanner');
+    banner.classList.add('show');
+    setTimeout(() => banner.classList.remove('show'), 3500);
+  }
+
+  function renderFeed() {
+    const list = document.getElementById('feedList');
+    if (issues.length === 0) {
+      list.innerHTML = '<div class="empty">No issues reported yet.</div>';
+      return;
+    }
+    list.innerHTML = issues.map(i => `
+      <div class="issue">
+        <div class="issue-top">
+          <span class="issue-cat">${i.category}</span>
+          <span class="status ${i.status}">${i.status}</span>
+        </div>
+        <p class="desc">${i.description}</p>
+        <div class="meta">${i.location} · Reported by ${i.reporterType} · ${i.date}</div>
+      </div>
+    `).join('');
+  }
+
+  renderFeed();
+</script>
+
+</body>
+</html>
